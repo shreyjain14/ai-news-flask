@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}
+  Home
+{% endblock %}
+{% block content %}
+
+    <main class="mt-3">
+
+        <div class="container">
+            <div class="row">
+                <div class="col">
+
+                    <h1>AI News</h1>
+
+                    <div id="scroller" class="mb-3">
+
+                        <template id="post_template">
+                            <a href="#" id="temp_link">
+                                <div class="card mb-3 animated fadeIn shadow-sm">
+                                    <div class="card-body">
+                                        <h4 class="card-title" id="title"></h4>
+                                        <span class="text-muted" id="description"></span>
+                                    </div>
+                                </div>
+                            </a>
+
+                        </template>
+
+                    </div>
+
+                    <div class="d-flex justify-content-center mb-3" id="sentinel">
+                        <div class="spinner-border" role="status"></div>
+                    </div>
+
+                    <a class="navbar-brand" id="loaded" href="#">0 items loaded</a>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+
+        var scroller = document.querySelector("#scroller");
+        var template = document.querySelector("#post_template");
+        var loaded = document.querySelector("#loaded");
+        var sentinel = document.querySelector("#sentinel");
+
+        var counter = 0;
+
+        function loadItems() {
+
+            fetch(`/load?c=${counter}`).then((response) => {
+
+                response.json().then((data) => {
+
+                    if (!data.length) {
+                        sentinel.innerHTML = 'No more posts';
+                    }
+
+                    console.log(data)
+
+                    for (var i = 0; i < data.length; i++) {
+
+                        const template_clone = template.content.cloneNode(true);
+
+                        template_clone.querySelector("#title").innerHTML = data[i][1];
+                        template_clone.querySelector("#description").innerHTML = data[i][2];
+                        template_clone.querySelector("#temp_link").href = `/article/${data[i][0]}`;
+
+                        scroller.appendChild(template_clone);
+                        counter += 1;
+
+                        loaded.innerHTML = `${counter} items loaded`;
+
+                    }
+
+                })
+
+            })
+
+        }
+
+        var intersectionObserver = new IntersectionObserver(entries => {
+
+            if (entries[0].intersectionRatio <= 0) {
+                return;
+            }
+
+            loadItems();
+
+        });
+        intersectionObserver.observe(sentinel)
+
+    </script>
+
+{% endblock %}
